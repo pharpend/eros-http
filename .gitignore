@@ -1,0 +1,9 @@
+dist/
+.cabal-sandbox/
+cabal.sandbox.config
+*~
+*.sass-cache*
+/assets/css
+sitekey.pem
+sitecert.pem
+localhost:8000/
