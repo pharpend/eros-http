@@ -22,7 +22,8 @@ executable eros-http
   -- other-modules:       
   -- other-extensions:    
   build-depends:
-      base            >=4.7  && <4.8
+      aeson           >=0.7  && <0.8
+    , base            >=4.7  && <4.8
     , bytestring      >=0.10 && <0.11
     , eros            >=0.5  && <0.6
     , http-types      >=0.8  && <0.9
@@ -35,3 +36,4 @@ executable eros-http
   ghc-options:
     -O1
     -Wall
+    -fno-warn-orphans

@@ -12,6 +12,9 @@
 
 module Main where
 
+import           Control.Applicative
+import           Control.Monad (mzero)
+import           Data.Aeson
 import qualified Data.ByteString.Lazy as Bl
 import qualified Data.Text.Lazy as Tl
 import           Network.HTTP.Types
@@ -26,8 +29,8 @@ main = do
   run 8000 app
 
 runRequest :: Request -> [PhraseMap] -> IO Response
-runRequest _ _ = do
-  return nullResponse
+runRequest req maps = do
+  return $ jsonResponse "go fuck yourself"
 
 jsonResponse :: Bl.ByteString -> Response
 jsonResponse = responseLBS status200 [(hContentType, "application/json")]
@@ -44,5 +47,33 @@ data ServerInput = CensorInput { text   :: Tl.Text
                  | GetInputSchema
                  | GetPhraselistSchema
                  | GetOutputSchema
-                 | Help
+                 | GetAllSchemata
   deriving (Eq)
+
+instance FromJSON ErosList where
+  parseJSON (String v) = do
+    case (erosListByName $ Tl.fromStrict v) of
+      Just l  -> return l
+      Nothing -> mzero
+  parseJSON _          = mzero
+
+instance FromJSON ServerInput where
+  parseJSON (Object v) = do
+    action <- v .: "action"
+    case (action :: Tl.Text) of
+      "get-schema" -> do 
+         whichSchema <- v .: "schema"
+         case (whichSchema :: Tl.Text) of                                   
+           "input"      -> return GetInputSchema                           
+           "output"     -> return GetOutputSchema                         
+           "phraselist" -> return GetPhraselistSchema                 
+           "all"        -> return GetAllSchemata
+           _            -> mzero
+      "censor"     -> CensorInput 
+                        <$> v .:  "text"                      
+                        <*> v .:? "eros-lists" .!= erosLists
+                        <*> v .:? "pretty"     .!= False
+      "ls"         -> GetLists 
+                        <$> v .: "lists"
+      _            -> mzero
+  parseJSON _          = mzero
