@@ -16,39 +16,16 @@ import           Control.Applicative
 import           Control.Monad (mzero)
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as Bl
+import           Data.ByteString.Lazy.Char8 (pack)
+import           Data.Monoid
+import qualified Data.Text      as Ts
 import qualified Data.Text.Lazy as Tl
+import           Data.Text.Lazy.Encoding
 import           Network.HTTP.Types
 import           Network.Wai
 import           Network.Wai.Handler.Warp
+import qualified Paths_eros_http as Peh
 import           Text.Eros
-
-main :: IO ()
-main = do
-  erosMaps <- mapM readPhraseMap erosLists
-  let app req recieveResponse = recieveResponse =<< runRequest req erosMaps
-  run 8000 app
-
-runRequest :: Request -> [PhraseMap] -> IO Response
-runRequest req maps = do
-  return $ jsonResponse "go fuck yourself"
-
-jsonResponse :: Bl.ByteString -> Response
-jsonResponse = responseLBS status200 [(hContentType, "application/json")]
-
-nullResponse :: Response
-nullResponse = responseLBS status200 [] ""
-
-data ServerInput = CensorInput { text   :: Tl.Text
-                               , elists :: [ErosList]
-                               , pretty :: Bool
-                               }
-                 | GetLists { elists :: [ErosList]
-                            }
-                 | GetInputSchema
-                 | GetPhraselistSchema
-                 | GetOutputSchema
-                 | GetAllSchemata
-  deriving (Eq)
 
 instance FromJSON ErosList where
   parseJSON (String v) = do
@@ -61,19 +38,70 @@ instance FromJSON ServerInput where
   parseJSON (Object v) = do
     action <- v .: "action"
     case (action :: Tl.Text) of
-      "get-schema" -> do 
-         whichSchema <- v .: "schema"
-         case (whichSchema :: Tl.Text) of                                   
-           "input"      -> return GetInputSchema                           
-           "output"     -> return GetOutputSchema                         
-           "phraselist" -> return GetPhraselistSchema                 
-           "all"        -> return GetAllSchemata
-           _            -> mzero
       "censor"     -> CensorInput 
                         <$> v .:  "text"                      
-                        <*> v .:? "eros-lists" .!= erosLists
-                        <*> v .:? "pretty"     .!= False
-      "ls"         -> GetLists 
-                        <$> v .: "lists"
-      _            -> mzero
-  parseJSON _          = mzero
+                        <*> v .:? "lists" .!= erosLists
+      "ls"         -> GetList 
+                        <$> v .: "list"
+      a            -> return . BadInput $ "Invalid action: " <> a
+  parseJSON _          = return . BadInput $ "I need an object, dumbass."
+
+data ServerInput = CensorInput { text   :: Tl.Text
+                               , elists :: [ErosList]
+                               }
+                 | GetList { elist :: ErosList
+                           }
+                 | BadInput { errorMessage :: Tl.Text
+                            }
+  deriving (Eq)
+
+-- |Run everything
+main :: IO ()
+main = do
+  let app req recieveResponse = recieveResponse =<< runRequest req
+  run 8000 app
+
+-- |Take the request, generate a response
+runRequest :: Request -> IO Response
+runRequest req = do
+      case requestMethod req of
+        "GET" -> do
+          readmeText <- Bl.readFile =<< Peh.getDataFileName "README.md"
+          return $ plainResponse readmeText
+        "POST" -> do
+          noio <- Bl.fromStrict <$> requestBody req
+          case eitherDecode noio of
+            Left emsg ->
+              return . responseLBS status400 [(hContentType, "text/plain")] . pack $ emsg <> "\n"
+            Right ipt ->
+              jsonResponse <$> runSI ipt
+        _ -> do
+          return $ responseLBS status405 [(hContentType, "text/plain")] "Method not supported"
+    where
+      jsonResponse :: Bl.ByteString -> Response
+      jsonResponse = responseLBS status200 [(hContentType, "application/json")]
+      plainResponse :: Bl.ByteString -> Response
+      plainResponse = responseLBS status200 [(hContentType, "text/plain")]
+
+runSI :: ServerInput -> IO Bl.ByteString
+runSI (CensorInput txt els) = do
+  maps <- mapM readPhraseMap els
+  let noms        = [probably el | el <- els]
+      scores      = [messageScore txt pmap | pmap <- maps]
+      nomScoreMap = zip noms scores
+      nomScorejs  = object [nom .= tx | (nom, tx) <- nomScoreMap]
+  return $ encode nomScorejs
+
+runSI (GetList el) = do
+  tfPath <- phraselistPath el
+  Bl.readFile tfPath
+
+runSI (BadInput emsg) = return $ encodeUtf8 emsg
+
+probably :: ErosList -> Ts.Text
+probably el =
+  case erosNameByList el of
+    Just s -> Tl.toStrict s
+    -- No idea how we would get here, but nonetheless, we're doing
+    -- a table lookup, so things can go wrong.
+    Nothing -> "unknown"
