@@ -1,0 +1,32 @@
+<h1 id="eros-http">eros-http</h1>
+<p>This is an HTTP front-end to the <a href="https://github.com/pharpend/eros">Eros library</a>. Eros is a text censorship library, that I wrote</p>
+<p>The server takes POST data in JSON, and then sends back some JSON data, or an Aeson error message if there's invalid data (Aeson is the JSON library I used).</p>
+<p>If the server receives a GET request, it returns an plain-text representation of this file.</p>
+<h1 id="json-input">JSON input</h1>
+<p>I'm too lazy and incompetent to write a proper input schema. Here's the Haskell code that decodes the input.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">ServerInput</span> <span class="kw">where</span>
+  parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span> <span class="kw">do</span>
+    action <span class="ot">&lt;-</span> v <span class="fu">.:</span> <span class="st">&quot;action&quot;</span>
+    <span class="kw">case</span> (<span class="ot">action ::</span> <span class="dt">Tl.Text</span>) <span class="kw">of</span>
+      <span class="st">&quot;censor&quot;</span>     <span class="ot">-&gt;</span> <span class="dt">CensorInput</span> 
+                        <span class="fu">&lt;$&gt;</span> v <span class="fu">.:</span>  <span class="st">&quot;text&quot;</span>                      
+                        <span class="fu">&lt;*&gt;</span> v <span class="fu">.:?</span> <span class="st">&quot;lists&quot;</span> <span class="fu">.!=</span> erosLists
+      <span class="st">&quot;ls&quot;</span>         <span class="ot">-&gt;</span> <span class="dt">GetList</span> 
+                        <span class="fu">&lt;$&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;list&quot;</span>
+      a            <span class="ot">-&gt;</span> return <span class="fu">.</span> <span class="dt">BadInput</span> <span class="fu">$</span> <span class="st">&quot;Invalid action: &quot;</span> <span class="fu">&lt;&gt;</span> a
+  parseJSON _          <span class="fu">=</span> return <span class="fu">.</span> <span class="dt">BadInput</span> <span class="fu">$</span> <span class="st">&quot;I need an object, dumbass.&quot;</span></code></pre>
+<p>The output schema is different depending on the value of <code>action</code>. Here's the input → output function.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">runSI ::</span> <span class="dt">ServerInput</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Bl.ByteString</span>
+runSI (<span class="dt">CensorInput</span> txt els) <span class="fu">=</span> <span class="kw">do</span>
+  maps <span class="ot">&lt;-</span> mapM readPhraseMap els
+  <span class="kw">let</span> noms        <span class="fu">=</span> [probably el <span class="fu">|</span> el <span class="ot">&lt;-</span> els]
+      scores      <span class="fu">=</span> [messageScore txt pmap <span class="fu">|</span> pmap <span class="ot">&lt;-</span> maps]
+      nomScoreMap <span class="fu">=</span> zip noms scores
+      nomScorejs  <span class="fu">=</span> object [nom <span class="fu">.=</span> tx <span class="fu">|</span> (nom, tx) <span class="ot">&lt;-</span> nomScoreMap]
+  return <span class="fu">$</span> encode nomScorejs
+
+runSI (<span class="dt">GetList</span> el) <span class="fu">=</span> <span class="kw">do</span>
+  tfPath <span class="ot">&lt;-</span> phraselistPath el
+  Bl.readFile tfPath
+
+runSI (<span class="dt">BadInput</span> emsg) <span class="fu">=</span> return <span class="fu">$</span> encodeUtf8 emsg</code></pre>

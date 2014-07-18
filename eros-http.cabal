@@ -17,7 +17,7 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 data-files:
-  README.md
+  res/readme.html
 
 executable eros-http
   main-is:             Main.hs

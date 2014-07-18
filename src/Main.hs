@@ -66,8 +66,8 @@ runRequest :: Request -> IO Response
 runRequest req = do
       case requestMethod req of
         "GET" -> do
-          readmeText <- Bl.readFile =<< Peh.getDataFileName "README.md"
-          return $ plainResponse readmeText
+          readmeText <- Bl.readFile =<< Peh.getDataFileName "res/readme.html"
+          return $ htmlResponse readmeText
         "POST" -> do
           noio <- Bl.fromStrict <$> requestBody req
           case eitherDecode noio of
@@ -80,6 +80,8 @@ runRequest req = do
     where
       jsonResponse :: Bl.ByteString -> Response
       jsonResponse = responseLBS status200 [(hContentType, "application/json")]
+      htmlResponse :: Bl.ByteString -> Response
+      htmlResponse = responseLBS status200 [(hContentType, "text/html")]
       plainResponse :: Bl.ByteString -> Response
       plainResponse = responseLBS status200 [(hContentType, "text/plain")]
 
