@@ -13,11 +13,8 @@
 module Main where
 
 import           Control.Applicative
-import           Control.Monad (mzero)
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as Bl
-import           Data.ByteString.Lazy.Char8 (pack)
-import           Data.Monoid
 import qualified Data.Text      as Ts
 import qualified Data.Text.Lazy as Tl
 import           Data.Text.Lazy.Encoding
@@ -27,78 +24,46 @@ import           Network.Wai.Handler.Warp
 import qualified Paths_eros_http as Peh
 import           Text.Eros
 
-instance FromJSON ErosList where
-  parseJSON (String v) = do
-    case (erosListByName $ Tl.fromStrict v) of
-      Just l  -> return l
-      Nothing -> mzero
-  parseJSON _          = mzero
-
-instance FromJSON ServerInput where
-  parseJSON (Object v) = do
-    action <- v .: "action"
-    case (action :: Tl.Text) of
-      "censor"     -> CensorInput 
-                        <$> v .:  "text"                      
-                        <*> v .:? "lists" .!= erosLists
-      "ls"         -> GetList 
-                        <$> v .: "list"
-      a            -> return . BadInput $ "Invalid action: " <> a
-  parseJSON _          = return . BadInput $ "I need an object, dumbass."
-
-data ServerInput = CensorInput { text   :: Tl.Text
-                               , elists :: [ErosList]
-                               }
-                 | GetList { elist :: ErosList
-                           }
-                 | BadInput { errorMessage :: Tl.Text
-                            }
-  deriving (Eq)
-
 -- |Run everything
 main :: IO ()
 main = do
-  let app req recieveResponse = recieveResponse =<< runRequest req
-  run 8000 app
+    phraseMaps <- mapM getListPair erosLists
+    let app req recieveResponse = recieveResponse =<< runRequest req phraseMaps
+    run 8000 app
+  where
+    getListPair :: ErosList -> IO (ErosList, PhraseMap)
+    getListPair list = do
+      phraseMap <- readPhraseMap list
+      return (list, phraseMap)
 
 -- |Take the request, generate a response
-runRequest :: Request -> IO Response
-runRequest req = do
+runRequest :: Request -> [(ErosList, PhraseMap)] -> IO Response
+runRequest req pmaps = do
       case requestMethod req of
         "GET" -> do
           readmeText <- Bl.readFile =<< Peh.getDataFileName "res/readme.html"
           return $ htmlResponse readmeText
         "POST" -> do
-          noio <- Bl.fromStrict <$> requestBody req
-          case eitherDecode noio of
-            Left emsg ->
-              return . responseLBS status400 [(hContentType, "text/plain")] . pack $ emsg <> "\n"
-            Right ipt ->
-              jsonResponse <$> runSI ipt
+          serverInput <- decodeUtf8 <$> Bl.fromStrict <$> requestBody req
+          jsonResponse <$> runInput serverInput pmaps
         _ -> do
-          return $ responseLBS status405 [(hContentType, "text/plain")] "Method not supported"
+           errorResponse405 "Method not supported"
     where
       jsonResponse :: Bl.ByteString -> Response
       jsonResponse = responseLBS status200 [(hContentType, "application/json")]
       htmlResponse :: Bl.ByteString -> Response
       htmlResponse = responseLBS status200 [(hContentType, "text/html")]
-      plainResponse :: Bl.ByteString -> Response
-      plainResponse = responseLBS status200 [(hContentType, "text/plain")]
+      errorResponse405 :: Bl.ByteString -> IO Response
+      errorResponse405 = return . responseLBS status405 [(hContentType, "text/plain")]
 
-runSI :: ServerInput -> IO Bl.ByteString
-runSI (CensorInput txt els) = do
-  maps <- mapM readPhraseMap els
-  let noms        = [probably el | el <- els]
-      scores      = [messageScore txt pmap | pmap <- maps]
-      nomScoreMap = zip noms scores
-      nomScorejs  = object [nom .= tx | (nom, tx) <- nomScoreMap]
-  return $ encode nomScorejs
-
-runSI (GetList el) = do
-  tfPath <- phraselistPath el
-  Bl.readFile tfPath
-
-runSI (BadInput emsg) = return $ encodeUtf8 emsg
+runInput :: Message -> [(ErosList, PhraseMap)] -> IO Bl.ByteString
+runInput txt listsMaps = return lsEncoded
+  where lsEncoded      = encode listScoreAlist
+        listScoreAlist = object [nom .= tx | (nom, tx) <- zip listNames scores]
+        listNames      = map probably lists
+        scores         = map (messageScore txt) maps
+        lists          = [v | (v, _) <- listsMaps]
+        maps           = [m | (_, m) <- listsMaps]
 
 probably :: ErosList -> Ts.Text
 probably el =
