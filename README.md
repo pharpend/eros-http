@@ -48,8 +48,7 @@ alphabetized by key.
 }
 ```
 
-Submitting [this paragraph](http://lpaste.net/107778) (extremely NSFW text)
-gives the following result
+The home page of PornHub yields this result:
 
 ```json
 {
@@ -70,7 +69,7 @@ gives the following result
   "nudism": 0,
   "peer2peer": 0,
   "personals": 0,
-  "pornography": 27100,
+  "pornography": 8790,
   "proxies": 0,
   "secret-societies": 0,
   "self-labeling": 0,
@@ -84,10 +83,15 @@ gives the following result
 }
 ```
 
-You can see how the score racks up quickly.
+This is the command I used
+
+    curl www.pornhub.com | curl -d @- localhost:8000 | prettify.rb
+
+This uses my
+[JSON prettifier script](https://raw.githubusercontent.com/pharpend/dotfiles/master/bin/prettify.rb).
 
 # Overflow bug
-
+~~
 There's a fundamental flaw in the algorithm where if it gets a lot of data with
 a lot of flagged phrases, it takes a long time to calculate the result. The
 server times out after 30 seconds. I haven't figured out how to get
@@ -97,3 +101,6 @@ This won't be a problem for typical usage, only if you try to send paragraphs of
 dirty data in one string.
 
 Typical usage is for SMS messages, which are at most 160 characters long.
+~~
+
+**Edit** - This bug was fixed in version 0.6.
