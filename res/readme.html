@@ -3,5 +3,34 @@
 <h1 id="usage">Usage</h1>
 <p>If the server receives a GET request, it returns an plain-text representation of this file.</p>
 <p>It takes an input string via POST, and returns some data in JSON mapping each phraselist to the score for the input string. The JSON is compressed.</p>
-<p>I fed the server the GPL, here are the results.</p>
-<pre class="sourceCode json"><code class="sourceCode json">{<span class="dt">&quot;illegal-drugs&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;upstream-filter&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;gore&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;news&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;sport&quot;</span>:<span class="dv">30</span>,<span class="dt">&quot;games&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;drug-advocacy&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;nudism&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;secret-societies&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;personals&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;id-theft&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;intolerance&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;chat&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;conspiracy&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;pornography&quot;</span>:<span class="dv">20</span>,<span class="dt">&quot;malware&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;music&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;webmail&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;self-labeling&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;warez-hacking&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;proxies&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;peer2peer&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;gambling&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;forums&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;translation&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;weapons&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;violence&quot;</span>:<span class="dv">0</span>,<span class="dt">&quot;legal-drugs&quot;</span>:<span class="dv">0</span>}</code></pre>
+<p>I fed the server the GPL, here are the results, which have been prettified.</p>
+<pre class="sourceCode json"><code class="sourceCode json">{
+  <span class="dt">&quot;illegal-drugs&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;upstream-filter&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;gore&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;news&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;sport&quot;</span>: <span class="dv">30</span>,
+  <span class="dt">&quot;games&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;drug-advocacy&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;nudism&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;secret-societies&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;personals&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;id-theft&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;intolerance&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;chat&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;conspiracy&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;pornography&quot;</span>: <span class="dv">20</span>,
+  <span class="dt">&quot;malware&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;music&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;webmail&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;self-labeling&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;warez-hacking&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;proxies&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;peer2peer&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;gambling&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;forums&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;translation&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;weapons&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;violence&quot;</span>: <span class="dv">0</span>,
+  <span class="dt">&quot;legal-drugs&quot;</span>: <span class="dv">0</span>
+}</code></pre>
