@@ -22,27 +22,33 @@ import           Network.HTTP.Types
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import qualified Paths_eros_http as Peh
+import           Text.Blaze.Html.Renderer.Text
 import           Text.Eros
+import           Text.Markdown
 
 -- |Run everything
 main :: IO ()
 main = do
     phraseMaps <- mapM getListPair erosLists
-    let app req recieveResponse = recieveResponse =<< runRequest req phraseMaps
+    readmePath <- Peh.getDataFileName "README.md"
+    readmeBs   <- Bl.readFile readmePath
+    let readmeText = decodeUtf8 readmeBs
+        readmeHtml = renderHtml $ markdown def readmeText
+        app req recieveResponse = recieveResponse =<< runRequest req phraseMaps readmeHtml
     run 8000 app
   where
+
     getListPair :: ErosList -> IO (ErosList, PhraseMap)
     getListPair list = do
       phraseMap <- readPhraseMap list
       return (list, phraseMap)
 
 -- |Take the request, generate a response
-runRequest :: Request -> [(ErosList, PhraseMap)] -> IO Response
-runRequest req pmaps = do
+runRequest :: Request -> [(ErosList, PhraseMap)] -> Tl.Text -> IO Response
+runRequest req pmaps readmeText = do
       case requestMethod req of
         "GET" -> do
-          readmeText <- Bl.readFile =<< Peh.getDataFileName "res/readme.html"
-          return $ htmlResponse readmeText
+          return $ htmlResponse $ encodeUtf8 readmeText
         "POST" -> do
           serverInput <- decodeUtf8 <$> Bl.fromStrict <$> requestBody req
           jsonResponse <$> runInput serverInput pmaps
