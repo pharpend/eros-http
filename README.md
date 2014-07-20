@@ -91,16 +91,15 @@ This uses my
 [JSON prettifier script](https://raw.githubusercontent.com/pharpend/dotfiles/master/bin/prettify.rb).
 
 # Overflow bug
-~~
-There's a fundamental flaw in the algorithm where if it gets a lot of data with
-a lot of flagged phrases, it takes a long time to calculate the result. The
+
+~~There's a fundamental flaw in the algorithm where if it gets a lot of data
+with a lot of flagged phrases, it takes a long time to calculate the result. The
 server times out after 30 seconds. I haven't figured out how to get
 multiprocessing, so this will remain a bug until I do.
 
 This won't be a problem for typical usage, only if you try to send paragraphs of
 dirty data in one string.
 
-Typical usage is for SMS messages, which are at most 160 characters long.
-~~
+Typical usage is for SMS messages, which are at most 160 characters long.~~
 
 **Edit** - This bug was fixed in version 0.6.
