@@ -2,11 +2,15 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                eros-http
-version:             0.5.0.0
+version:             0.6.0.0
 synopsis:            JSON HTTP interface to Eros.
 description:         
   This is a small program that runs an HTTP server.
-homepage:            https://eros.rockywestlabs.com/
+  .
+  Changelog
+  .
+  [0.6] Update to be compatible with Eros v.0.6
+-- homepage:            https://eros.rockywestlabs.com/
 license:             BSD3
 license-file:        LICENSE
 author:              Peter Harpending
@@ -24,11 +28,11 @@ executable eros-http
   other-modules:       Paths_eros_http
   -- other-extensions:    
   build-depends:
-      aeson           >=0.7   && <0.8
+      aeson           >=0.8   && <0.9
     , base            >=4.7   && <4.8
     , blaze-html      >=0.7   && <0.8
     , bytestring      >=0.10  && <0.11
-    , eros            >=0.5.3 && <0.6
+    , eros            >=0.6   && <0.7
     , http-types      >=0.8   && <0.9
     , markdown        >=0.1   && <0.2
     , text            >=1.1   && <1.2
