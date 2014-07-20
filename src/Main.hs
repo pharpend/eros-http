@@ -37,7 +37,6 @@ main = do
         app req recieveResponse = recieveResponse =<< runRequest req phraseMaps readmeHtml
     run 8000 app
   where
-
     getListPair :: ErosList -> IO (ErosList, PhraseMap)
     getListPair list = do
       phraseMap <- readPhraseMap list

@@ -41,3 +41,4 @@ executable eros-http
     -O2
     -Wall
     -fno-warn-orphans
+    -threaded
