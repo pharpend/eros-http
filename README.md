@@ -6,8 +6,8 @@ library, that I wrote.
 
 # Usage
 
-If the server receives a GET request, it returns an plain-text representation of
-this file.
+If the server receives a GET request, it returns an HTML representation of this
+file.
 
 It takes an input string via POST, and returns some data in JSON mapping each
 phraselist to the score for the input string. The JSON is compressed.
